@@ -10,3 +10,5 @@ node_modules/
 /Details.txt
 /IMG_*.png
 .claude/
+.dev-content.json
+/site-details-template.csv

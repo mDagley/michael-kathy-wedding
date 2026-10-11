@@ -28,6 +28,20 @@ A few placeholders and pieces of copy live directly in the HTML instead, so also
 - `schedule.html`: the fourth timeline item ("add" circle, bound to `events.extra`). Delete that whole `<li>` if the couple has no extra event.
 - Fixed wording such as "Dinner, dancing, and candlelight" (home and schedule) and "Your presence is the greatest gift" (registry). Edit these in the HTML if the couple wants different words.
 
+## Letting the couple edit the details (Google Sheet)
+
+The couple edit a **Site Details** tab in the same spreadsheet that holds the RSVPs, and the site picks their changes up within a minute or two. See [docs/EDITING.md](docs/EDITING.md) for the guide to give them.
+
+One-time setup:
+
+1. `npm run content-template` writes `site-details-template.csv` (git-ignored).
+2. In the Google Sheet choose **File, Import, Upload**, pick the CSV, and choose **Insert new sheet(s)**. Name the new tab exactly `Site Details` (or set `CONTENT_TAB` in Netlify to the name you chose). Freeze row 1 and, if you like, protect columns A, B and D so only column C can be edited.
+3. No new keys or settings are needed: the service account that saves RSVPs already has access to the whole spreadsheet.
+
+How it works: `GET /api/content` (the `content` function) reads the tab, validates every value, and caches it for 60 seconds; if the sheet is unavailable it keeps serving the last good copy for up to 10 minutes and then the site's built-in text. Only the details listed in `lib/content-fields.js` can be changed, and only the text itself: photos, themes, the countdown date, photo credits and the venue stay in code and Netlify settings. To make another detail editable, add it to `site/js/content.js` and to `lib/content-fields.js` (a test fails until both agree), then re-run `npm run content-template` and add the new row to the sheet.
+
+Local development: put a flat JSON map in `.dev-content.json`, for example `{"dress.code":"Black tie","announcement.text":"Hello!"}`, and run `npm run dev`.
+
 ## The hidden venue
 
 The venue is **never** in the site files. It lives in two environment variables, `VENUE_NAME` and `VENUE_ADDRESS`, and the `/api/rsvp` function returns it only when the saved answer is "yes."
