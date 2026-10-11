@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registry · Michael &amp; Kathy</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body data-page="registry">
+  <div id="site-nav"></div>
+  <main>
+    <header class="band"><h1 class="script">Registry</h1></header>
+    <div class="container container--narrow center">
+      <p>Your presence is the greatest gift. If you'd like to give something, <span data-c="registry.message"></span></p>
+      <div class="grid-2" style="margin-top:32px">
+        <div class="card">
+          <img class="card-img" src="assets/photos/macrame-panel.jpg" alt="Cream macrame wall hanging on white brick">
+          <h3 data-c="registry.items.0.name"></h3>
+          <p data-c="registry.items.0.description"></p>
+          <a class="btn" data-c-href="registry.items.0.link" href="#" style="padding:14px 34px;font-size:13px">View registry</a>
+        </div>
+        <div class="card">
+          <img class="card-img" src="assets/photos/terracotta-fabric.jpg" alt="Rust-colored gauze fabric">
+          <h3 data-c="registry.items.1.name"></h3>
+          <p data-c="registry.items.1.description"></p>
+          <a class="btn" data-c-href="registry.items.1.link" href="#" style="padding:14px 34px;font-size:13px">View registry</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
