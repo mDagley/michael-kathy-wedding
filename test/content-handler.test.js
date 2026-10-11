@@ -1,12 +1,12 @@
 // test/content-handler.test.js
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createContentFunction, FRESH_MS, STALE_MS, RETRY_MS } from '../lib/content-handler.js';
+import { createContentFunction, FRESH_MS, STALE_MS, RETRY_MS, LOAD_TIMEOUT_MS } from '../lib/content-handler.js';
 import { createLimiter } from '../lib/limiter.js';
 
 const get = (ip = '1.2.3.4') => ({ httpMethod: 'GET', headers: { 'x-nf-client-connection-ip': ip } });
 
-function build({ load, startAt = 1_000_000, limiter } = {}) {
+function build({ load, startAt = 1_000_000, limiter, loadTimeoutMs } = {}) {
   let t = startAt;
   const calls = { load: 0 };
   const source = { load: async () => { calls.load += 1; return load(calls.load); } };
@@ -14,8 +14,9 @@ function build({ load, startAt = 1_000_000, limiter } = {}) {
     source,
     now: () => t,
     limiter: limiter || createLimiter({ max: 1000, windowMs: 1000 }),
+    ...(loadTimeoutMs ? { loadTimeoutMs } : {}),
   });
-  return { handler, calls, advance: (ms) => { t += ms; } };
+  return { handler, calls, advance: (ms) => { t += ms; }, setTime: (v) => { t = v; } };
 }
 
 test('only GET is allowed', async () => {
@@ -65,6 +66,15 @@ test('stale data is not served forever', async () => {
   await handler(get());
   advance(STALE_MS + RETRY_MS + 1);
   assert.equal((await handler(get())).statusCode, 503);
+});
+
+test('stale data returned is the cached value (strengthened)', async () => {
+  const { handler, advance } = build({ load: (n) => { if (n === 1) return { 'dress.code': 'Black tie' }; throw new Error('down'); } });
+  await handler(get());
+  advance(STALE_MS - 1);
+  const res = await handler(get());
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(JSON.parse(res.body), { ok: true, values: { 'dress.code': 'Black tie' } });
 });
 
 test('with no data and a failing sheet the answer is a generic 503 with no details', async () => {
@@ -134,4 +144,196 @@ test('requests are rate limited per client IP', async () => {
   assert.equal((await handler(get('9.9.9.9'))).statusCode, 200);
   assert.equal((await handler(get('9.9.9.9'))).statusCode, 429);
   assert.equal((await handler(get('8.8.8.8'))).statusCode, 200);
+});
+
+// ---- hardening tests ----
+async function withLog(fn) {
+  const orig = console.error;
+  const logged = [];
+  console.error = (...a) => logged.push(a.join(' '));
+  try { await fn(logged); } finally { console.error = orig; }
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const val = (res) => JSON.parse(res.body).values['dress.code'];
+const GENERIC = { ok: false, error: 'Content is temporarily unavailable.' };
+
+test('LOAD_TIMEOUT_MS defaults to 6 seconds', () => {
+  assert.equal(LOAD_TIMEOUT_MS, 6000);
+});
+
+test('timeout: a hung read with no cache answers 503 quickly and generically', async () => {
+  await withLog(async (logged) => {
+    const { handler } = build({ load: () => new Promise(() => {}), loadTimeoutMs: 30 });
+    const started = Date.now();
+    const res = await handler(get());
+    assert.ok(Date.now() - started < 500);
+    assert.equal(res.statusCode, 503);
+    assert.deepEqual(JSON.parse(res.body), GENERIC);
+    assert.equal(logged.length, 1);
+    assert.ok(logged[0].includes('ETIMEDOUT'));
+    assert.ok(logged[0].includes('Content source timed out.'));
+  });
+});
+
+test('timeout: a hung refresh serves the stale data quickly', async () => {
+  await withLog(async () => {
+    const { handler, advance } = build({
+      load: (n) => (n === 1 ? { 'dress.code': 'Black tie' } : new Promise(() => {})),
+      loadTimeoutMs: 30,
+    });
+    await handler(get());
+    advance(FRESH_MS + 1);
+    const started = Date.now();
+    const res = await handler(get());
+    assert.ok(Date.now() - started < 500);
+    assert.equal(res.statusCode, 200);
+    assert.equal(val(res), 'Black tie');
+  });
+});
+
+test('timeout: inflight is cleared so a later request loads again and can recover', async () => {
+  await withLog(async () => {
+    const { handler, calls, advance } = build({
+      load: (n) => (n === 1 ? new Promise(() => {}) : { 'dress.code': 'Recovered' }),
+      loadTimeoutMs: 30,
+    });
+    assert.equal((await handler(get())).statusCode, 503);
+    assert.equal(calls.load, 1);
+    advance(RETRY_MS + 1);
+    const res = await handler(get());
+    assert.equal(calls.load, 2);
+    assert.equal(res.statusCode, 200);
+    assert.equal(val(res), 'Recovered');
+  });
+});
+
+test('timeout: a load that finishes late does not replace the cache', async () => {
+  await withLog(async () => {
+    const { handler, calls, advance } = build({
+      load: (n) => {
+        if (n === 1) return { 'dress.code': 'Black tie' };
+        return new Promise((r) => setTimeout(() => r({ 'dress.code': 'LATE' }), 80));
+      },
+      loadTimeoutMs: 30,
+    });
+    await handler(get());
+    advance(FRESH_MS + 1);
+    assert.equal(val(await handler(get())), 'Black tie'); // stale, refresh timed out
+    await sleep(150); // the late load resolves meanwhile
+    const res = await handler(get()); // clock unchanged: inside the retry window
+    assert.equal(res.statusCode, 200);
+    assert.equal(val(res), 'Black tie');
+    assert.equal(calls.load, 2);
+  });
+});
+
+test('timeout: a late rejection after the timeout is swallowed', async () => {
+  await withLog(async () => {
+    const { handler } = build({
+      load: () => new Promise((_, rej) => setTimeout(() => rej(new Error('late boom')), 60)),
+      loadTimeoutMs: 20,
+    });
+    assert.equal((await handler(get())).statusCode, 503);
+    await sleep(120);
+  });
+});
+
+test('logging: a stale-served failure logs exactly one line with code and message, no secrets', async () => {
+  await withLog(async (logged) => {
+    const { handler, advance } = build({
+      load: (n) => {
+        if (n === 1) return { 'dress.code': 'Black tie' };
+        const e = new Error('quota exceeded'); e.code = 429; e.config = { data: 'guest@example.com' }; throw e;
+      },
+    });
+    await handler(get());
+    advance(FRESH_MS + 1);
+    const res = await handler(get());
+    assert.equal(res.statusCode, 200);
+    assert.equal(logged.length, 1);
+    assert.ok(logged[0].includes('429'));
+    assert.ok(logged[0].includes('quota exceeded'));
+    assert.equal(logged[0].includes('guest@example.com'), false);
+  });
+});
+
+test('logging: three requests within RETRY_MS of a failure log exactly one line in total', async () => {
+  await withLog(async (logged) => {
+    const { handler, calls } = build({ load: () => { throw new Error('down'); } });
+    await handler(get());
+    await handler(get());
+    await handler(get());
+    assert.equal(calls.load, 1);
+    assert.equal(logged.length, 1);
+  });
+});
+
+test('clock going backwards: the cache is treated as expired', async () => {
+  const { handler, calls, setTime } = build({ load: (n) => ({ 'dress.code': `v${n}` }) });
+  await handler(get());
+  setTime(500_000);
+  const res = await handler(get());
+  assert.equal(calls.load, 2);
+  assert.equal(val(res), 'v2');
+});
+
+test('a failed refresh with a cache does not hammer the sheet and serves the stale value', async () => {
+  await withLog(async () => {
+    const { handler, calls, advance } = build({
+      load: (n) => { if (n === 1) return { 'dress.code': 'Black tie' }; throw new Error('down'); },
+    });
+    await handler(get());
+    advance(FRESH_MS + 1);
+    assert.equal(val(await handler(get())), 'Black tie');
+    assert.equal(calls.load, 2);
+    advance(RETRY_MS - 1000);
+    assert.equal(val(await handler(get())), 'Black tie');
+    assert.equal(val(await handler(get())), 'Black tie');
+    assert.equal(calls.load, 2);
+  });
+});
+
+test('failure state clears after a success; a later failure is a new failure', async () => {
+  await withLog(async (logged) => {
+    const { handler, calls, advance } = build({
+      load: (n) => {
+        if (n === 1) return { 'dress.code': 'v1' };
+        if (n === 2) throw new Error('down');
+        if (n === 3) return { 'dress.code': 'v3' };
+        throw new Error('down again');
+      },
+    });
+    await handler(get()); // load 1
+    advance(FRESH_MS + 1);
+    assert.equal(val(await handler(get())), 'v1'); // load 2 fails, stale served
+    assert.equal(logged.length, 1);
+    advance(RETRY_MS + 1);
+    assert.equal(val(await handler(get())), 'v3'); // load 3 succeeds, NEW values
+    assert.equal(calls.load, 3);
+    advance(FRESH_MS + 1);
+    assert.equal(val(await handler(get())), 'v3'); // load 4 fails, stale served
+    assert.equal(calls.load, 4);
+    assert.equal(logged.length, 2);
+    assert.equal(val(await handler(get())), 'v3'); // inside the retry window
+    assert.equal(calls.load, 4);
+    advance(RETRY_MS + 1);
+    await handler(get());
+    assert.equal(calls.load, 5);
+    assert.equal(logged.length, 3);
+  });
+});
+
+test('concurrent requests sharing a rejecting refresh all get the same generic 503', async () => {
+  await withLog(async (logged) => {
+    const { handler, calls } = build({
+      load: async () => { await sleep(20); throw new Error('boom'); },
+    });
+    const results = await Promise.all([handler(get()), handler(get()), handler(get())]);
+    for (const res of results) {
+      assert.equal(res.statusCode, 503);
+      assert.deepEqual(JSON.parse(res.body), GENERIC);
+    }
+    assert.equal(calls.load, 1);
+    assert.equal(logged.length, 1);
+  });
 });
