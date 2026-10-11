@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schedule · Michael &amp; Kathy</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body data-page="schedule">
+  <div id="site-nav"></div>
+  <main>
+    <header class="band">
+      <div class="eyebrow" data-c="couple.dateLong"></div>
+      <h1 class="script">The Day</h1>
+    </header>
+
+    <div class="container container--narrow">
+      <img class="deco" src="assets/illustrations/leaf-rainbow.jpg" alt="">
+      <ol class="timeline">
+        <li>
+          <div class="tl-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          </div>
+          <div class="tl-body">
+            <div class="eyebrow" data-c="events.arrival.time"></div>
+            <h2>Guests arrive</h2>
+            <p data-c="events.arrival.note"></p>
+          </div>
+        </li>
+        <li>
+          <div class="tl-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="14" r="5"/><circle cx="15" cy="14" r="5"/><path d="M9 4l1.5 2L9 8 7.5 6z"/></svg>
+          </div>
+          <div class="tl-body">
+            <div class="eyebrow" data-c="events.ceremony.time"></div>
+            <h2>Ceremony</h2>
+            <p data-c="events.ceremony.details"></p>
+          </div>
+        </li>
+        <li>
+          <div class="tl-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10l-1 8a4 4 0 0 1-8 0z"/><path d="M12 15v6M8 21h8"/></svg>
+          </div>
+          <div class="tl-body">
+            <div class="eyebrow" data-c="events.reception.time"></div>
+            <h2>Reception</h2>
+            <p>Dinner, dancing, and candlelight. <span data-c="events.reception.details"></span></p>
+          </div>
+        </li>
+        <li>
+          <div class="tl-icon tl-icon--add" aria-hidden="true">+</div>
+          <div class="tl-body">
+            <div class="eyebrow" data-c="events.extra.time"></div>
+            <h2 data-c="events.extra.title"></h2>
+            <p>Send-off, brunch, or anything else the couple adds.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="grid-2" style="margin-top:44px">
+        <div class="card card--left">
+          <div class="eyebrow">Dress code</div>
+          <div class="big" data-c="dress.code"></div>
+          <p data-c="dress.note"></p>
+        </div>
+
+        <div>
+          <div class="venue-card" data-venue-state="locked">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Locked" style="color:var(--accent)"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <div class="eyebrow" style="margin-top:8px">Venue · <span data-c="couple.city"></span></div>
+            <div class="big">Revealed after you RSVP yes</div>
+            <a class="btn" href="rsvp.html" style="padding:12px 28px;font-size:13px">RSVP</a>
+            <details class="lookup">
+              <summary>Already RSVP'd? Look up the venue</summary>
+              <form id="lookup-form">
+                <div class="field"><label for="lk-name">Full name</label><input id="lk-name" type="text" name="name" autocomplete="name" required></div>
+                <div class="field"><label for="lk-email">Email</label><input id="lk-email" type="email" name="email" autocomplete="email" required></div>
+                <button class="btn btn--ghost" type="submit" style="padding:12px 28px;font-size:13px">Look up</button>
+                <p id="lookup-msg" class="status" role="status"></p>
+              </form>
+            </details>
+          </div>
+
+          <div class="venue-card venue-card--open" data-venue-state="revealed" hidden>
+            <div class="eyebrow">Venue</div>
+            <div class="big" data-venue-name></div>
+            <p data-venue-address></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
