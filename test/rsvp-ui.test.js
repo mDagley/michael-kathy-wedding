@@ -118,3 +118,36 @@ test('lookup with no match shows a message and reveals nothing', async () => {
   assert.match(document.getElementById('lookup-msg').textContent, /couldn't find/i);
   assert.equal(document.querySelector('[data-venue-state="revealed"]').hidden, true);
 });
+
+test('after a successful yes RSVP focus moves to the yes section', async () => {
+  const { document } = new JSDOM(rsvpHtml).window;
+  const fetchFn = async () => jsonResponse(200, { ok: true, attending: true, venue: { name: 'The Hall', address: '1 Main St' } });
+  initRsvpForm(document, { fetchFn, store: memStore(), contact: 'a@b.c' });
+  submit(document);
+  await flush();
+  assert.equal(document.activeElement, document.getElementById('rsvp-yes'));
+});
+
+test('after a successful no RSVP focus moves to the no section', async () => {
+  const { document } = new JSDOM(rsvpHtml).window;
+  document.querySelector('input[value="no"]').checked = true;
+  const fetchFn = async () => jsonResponse(200, { ok: true, attending: false });
+  initRsvpForm(document, { fetchFn, store: memStore(), contact: 'a@b.c' });
+  submit(document);
+  await flush();
+  assert.equal(document.activeElement, document.getElementById('rsvp-no'));
+});
+
+test('submitting twice quickly sends only one request', async () => {
+  const { document } = new JSDOM(rsvpHtml).window;
+  let calls = 0;
+  let resolveFetch;
+  const fetchFn = () => { calls += 1; return new Promise((r) => { resolveFetch = r; }); };
+  initRsvpForm(document, { fetchFn, store: memStore(), contact: 'a@b.c' });
+  submit(document);
+  submit(document);
+  assert.equal(calls, 1);
+  resolveFetch(jsonResponse(200, { ok: true, attending: false }));
+  await flush();
+  assert.equal(calls, 1);
+});

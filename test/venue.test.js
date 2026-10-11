@@ -63,3 +63,10 @@ test('showVenue(venue) reveals and fills the name and address', () => {
   assert.equal(document.querySelector('[data-venue-name]').textContent, 'The Hall');
   assert.equal(document.querySelector('[data-venue-address]').textContent, '1 Main St');
 });
+
+test('showVenue does not throw on a malformed venue without an address', () => {
+  const { document } = new JSDOM(html).window;
+  assert.doesNotThrow(() => showVenue(document, { name: 'Hall' }));
+  assert.equal(document.querySelector('[data-venue-name]').textContent, 'Hall');
+  assert.equal(document.querySelector('[data-venue-address]').textContent, '');
+});

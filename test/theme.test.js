@@ -39,3 +39,23 @@ test('setTheme rejects unknown themes', () => {
   const s = makeStorage();
   assert.throws(() => setTheme(s, 'hotpink'));
 });
+
+const brokenStorage = () => ({ getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); } });
+
+test('isPreview still returns true for ?preview when setItem throws', () => {
+  assert.equal(isPreview('?preview', brokenStorage()), true);
+});
+
+test('isPreview returns false when getItem throws', () => {
+  assert.equal(isPreview('', brokenStorage()), false);
+});
+
+test('resolveTheme returns the default when reading storage throws', () => {
+  assert.equal(resolveTheme({ search: '?preview', storage: brokenStorage() }), 'sage');
+  assert.equal(resolveTheme({ search: '', storage: brokenStorage() }), 'sage');
+});
+
+test('setTheme swallows storage errors for a valid theme but still rejects unknown ones', () => {
+  assert.doesNotThrow(() => setTheme(brokenStorage(), 'candlelit'));
+  assert.throws(() => setTheme(brokenStorage(), 'hotpink'), /Unknown theme/);
+});

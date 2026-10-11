@@ -28,6 +28,7 @@ export function initRsvpForm(doc, { fetchFn, store, contact }) {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (button.disabled) return;
     clearErrors(doc);
     errorBox.hidden = true;
     button.disabled = true;
@@ -54,9 +55,13 @@ export function initRsvpForm(doc, { fetchFn, store, contact }) {
         showVenue(doc, data.venue);
         yes.hidden = false;
         no.hidden = true;
+        yes.setAttribute('tabindex', '-1');
+        yes.focus();
       } else {
         no.hidden = false;
         yes.hidden = true;
+        no.setAttribute('tabindex', '-1');
+        no.focus();
       }
     } catch {
       errorBox.textContent = `We couldn't send your RSVP right now. Please try again, or contact us at ${contact}.`;

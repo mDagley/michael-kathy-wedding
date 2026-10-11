@@ -15,7 +15,7 @@ export const content = {
     arrival: { time: '[ARRIVAL TIME TBD]', note: '[ARRIVAL NOTE TBD]' },
     ceremony: { time: '[CEREMONY TIME TBD]', details: '[CEREMONY DETAILS TBD]' },
     reception: { time: '[RECEPTION TIME TBD]', details: '[RECEPTION DETAILS TBD]' },
-    extra: { time: '[TIME TBD]', title: '[ANOTHER EVENT TBD]' },
+    extra: { time: '[TIME TBD]', title: '[ANOTHER EVENT TBD]', details: '[EVENT DETAILS TBD]' },
   },
   dress: { code: '[ATTIRE TBD]', note: 'Earthy greens and warm tones are welcome.' },
   travel: {

@@ -6,19 +6,25 @@ const THEME_KEY = 'mk_theme';
 
 export function isPreview(search, storage) {
   if (/[?&]preview(=|&|$)/.test(search || '')) {
-    storage.setItem(PREVIEW_KEY, '1');
+    // If storage is unavailable, preview lasts only for this page.
+    try { storage.setItem(PREVIEW_KEY, '1'); } catch { /* ignore */ }
     return true;
   }
-  return storage.getItem(PREVIEW_KEY) === '1';
+  try {
+    return storage.getItem(PREVIEW_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 export function resolveTheme({ search, storage }) {
   if (!isPreview(search, storage)) return DEFAULT_THEME;
-  const stored = storage.getItem(THEME_KEY);
+  let stored;
+  try { stored = storage.getItem(THEME_KEY); } catch { return DEFAULT_THEME; }
   return THEMES.includes(stored) ? stored : DEFAULT_THEME;
 }
 
 export function setTheme(storage, name) {
   if (!THEMES.includes(name)) throw new Error(`Unknown theme: ${name}`);
-  storage.setItem(THEME_KEY, name);
+  try { storage.setItem(THEME_KEY, name); } catch { /* ignore */ }
 }
