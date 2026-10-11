@@ -203,3 +203,14 @@ test('after a successful lookup focus moves to the revealed block', async () => 
   assert.equal(revealed.getAttribute('tabindex'), '-1');
   assert.equal(document.activeElement, revealed);
 });
+
+test('the contact text may be a function, so live content changes show in the fallback message', async () => {
+  const { document } = new JSDOM(rsvpHtml).window;
+  let contact = 'old@example.com';
+  const fetchFn = async () => { throw new Error('offline'); };
+  initRsvpForm(document, { fetchFn, store: memStore(), contact: () => contact });
+  contact = 'new@example.com';
+  submit(document);
+  await flush();
+  assert.match(document.getElementById('rsvp-error').textContent, /new@example\.com/);
+});
