@@ -35,8 +35,14 @@ The couple edit a **Site Details** tab in the same spreadsheet that holds the RS
 One-time setup:
 
 1. `npm run content-template` writes `site-details-template.csv` (git-ignored).
-2. In the Google Sheet choose **File, Import, Upload**, pick the CSV, and choose **Insert new sheet(s)**. Name the new tab exactly `Site Details` (or set `CONTENT_TAB` in Netlify to the name you chose). Freeze row 1 and, if you like, protect columns A, B and D so only column C can be edited.
-3. No new keys or settings are needed: the service account that saves RSVPs already has access to the whole spreadsheet.
+2. In the Google Sheet choose **File, Import, Upload** and pick the CSV. In the import dialog:
+   - choose **Insert new sheet(s)** (NEVER "Replace spreadsheet" or "Replace current sheet": that would destroy the RSVPs tab);
+   - **untick "Convert text to numbers, dates, and formulas"**. Left ticked, Sheets turns "August 21, 2027" into a date and the site would then show it as "8/21/2027".
+3. Name the new tab exactly `Site Details` (or set `CONTENT_TAB` in Netlify to the name you chose). Then do these three things before handing it to the couple:
+   - Select column C (the Value column) and choose **Format, Number, Plain text**. This is required: without it, a phone number typed as "+1 312 555 0100" is read as a formula and shows `#ERROR!`, and times or dates typed later can be reformatted. The site reads the text exactly as displayed.
+   - Freeze row 1.
+   - Protect columns A, B and D (**Data, Protect sheets and ranges**) so only column C can be edited.
+4. No new keys or settings are needed: the service account that saves RSVPs already has access to the whole spreadsheet.
 
 How it works: `GET /api/content` (the `content` function) reads the tab, validates every value, and caches it for 60 seconds; if the sheet is unavailable it keeps serving the last good copy for up to 10 minutes and then the site's built-in text. Only the details listed in `lib/content-fields.js` can be changed, and only the text itself: photos, themes, the countdown date, photo credits and the venue stay in code and Netlify settings. To make another detail editable, add it to `site/js/content.js` and to `lib/content-fields.js` (a test fails until both agree), then re-run `npm run content-template` and add the new row to the sheet.
 
