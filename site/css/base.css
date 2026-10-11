@@ -108,12 +108,19 @@ p { margin: 0 0 12px; }
 .theme-switcher button[aria-pressed="true"] { background: var(--accent); color: var(--btn-text); }
 
 @media (max-width: 760px) {
-  .count-box { min-width: 72px; padding: 12px 6px; }
+  .countdown { flex-wrap: nowrap; gap: 8px; }
+  .count-box { flex: 1 1 0; min-width: 0; padding: 12px 4px; }
   .count-box b { font-size: 34px; }
+  .count-box span { font-size: 10px; letter-spacing: 1px; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .nav { padding: 16px 20px; }
   .container { padding: 40px 20px 48px; }
   .arch { flex-basis: 100%; width: 100%; max-width: 360px; margin: 0 auto; }
   .form { padding: 24px 20px; }
   .timeline li { gap: 18px; }
+}
+
+@media (max-width: 340px) {
+  .count-box b { font-size: 28px; }
+  .count-box span { font-size: 9px; letter-spacing: 0; }
 }
