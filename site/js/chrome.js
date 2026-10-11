@@ -12,7 +12,20 @@ function el(doc, tag, attrs = {}, ...children) {
 // A value is a placeholder if it contains a bracketed [TBD] marker anywhere.
 const flagIfPlaceholder = (value) => (value.includes('[') ? 'tbd' : false);
 
+function renderAnnouncement(doc, content) {
+  const text = String(content.announcement?.text ?? '').trim();
+  const existing = doc.querySelector('.announcement');
+  if (!text) {
+    existing?.remove();
+    return;
+  }
+  const bar = existing || el(doc, 'div', { class: 'announcement', role: 'region', 'aria-label': 'Announcement' });
+  bar.textContent = text;
+  if (!existing) doc.body.prepend(bar);
+}
+
 export function renderChrome(doc, content, currentPage) {
+  renderAnnouncement(doc, content);
   const navHost = doc.getElementById('site-nav');
   if (navHost) {
     const links = el(doc, 'div', { class: 'links' });

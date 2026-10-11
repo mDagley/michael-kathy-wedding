@@ -101,6 +101,9 @@ p { margin: 0 0 12px; }
 .status { margin: 0; font-size: 15px; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
+/* announcement banner (text comes from the couple's sheet; empty means no banner) */
+.announcement { background: var(--band); color: var(--band-text); text-align: center; padding: 10px 20px; font-size: 14px; letter-spacing: 1px; line-height: 1.4; border-bottom: 1px solid var(--band-line); overflow-wrap: anywhere; }
+
 /* footer and switcher */
 .footer { border-top: 1px solid var(--border); text-align: center; padding: 24px; font-size: 14px; letter-spacing: 2px; color: var(--text-2); }
 .footer .credits { margin-top: 8px; font-size: 12px; letter-spacing: 1px; }
