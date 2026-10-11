@@ -8,7 +8,7 @@ You can change most of the words on the site yourselves, any time. Use a compute
 2. Click the **Site Details** tab at the bottom.
 3. Find the row for the thing you want to change. The **What it is** column says what it is (for example "Ceremony start time").
 4. Click the cell in the **Value (edit this column)** column and type your change. Press Enter.
-5. Wait a minute or two, then refresh the website. Your change is live.
+5. Wait two or three minutes, then refresh the website. Your change is live.
 
 Please only edit the **Value** column. Leave the other columns alone, especially the last one (**key**): the website uses it to know which row is which.
 
@@ -19,12 +19,12 @@ Please only edit the **Value** column. Leave the other columns alone, especially
 - **Announcement banner:** find the row called **Announcement banner**, right at the top, and type a short message (up to 300 characters). It shows as a bar across the top of every page, for example "Parking lot B is closed, please use the garage." Delete the text to remove the bar.
 - **Dates and times:** write them out the way you want guests to read them, like "4:30 PM" or "Saturday, August 21, 2027".
 - **Long answers** (our story, FAQ) can have line breaks. On a Windows computer press **Alt+Enter** inside the cell to start a new line; on a Mac press **Cmd+Enter**.
-- **Length limits:** each detail has a maximum length; anything longer is cut off. A short answer is easier to read anyway.
+- **Length limits:** each detail has a maximum length; longer text is cut off, and a link that is too long is ignored and the placeholder shows instead. A short answer is easier to read anyway.
 - **Made a mistake?** Press Ctrl+Z (Cmd+Z on a Mac) to undo, or clear the cell to go back to the placeholder. Mistakes in the Value column are easy to fix and can't take the site down.
 
 ## If something looks wrong
 
-- **My change isn't showing.** Wait two minutes, then refresh the page with Ctrl+F5 (Cmd+Shift+R on a Mac). Make sure you edited the **Value** column in the tab called exactly **Site Details**.
+- **My change isn't showing.** Wait three minutes, then refresh the page with Ctrl+F5 (Cmd+Shift+R on a Mac). Make sure you edited the **Value** column in the tab called exactly **Site Details**.
 - **A cell shows `#ERROR!` or a date in a different style** (like "8/21/2027" instead of "August 21, 2027"). Select the whole **Value** column, then choose **Format, Number, Plain text**, and type the text again.
 - **Someone changed the last column or renamed the tab.** The website may stop picking up changes until it is put back. Ask your website helper.
 

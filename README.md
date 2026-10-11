@@ -32,7 +32,7 @@ A few placeholders and pieces of copy live directly in the HTML instead, so also
 
 The couple edit a **Site Details** tab in the same spreadsheet that holds the RSVPs, and the site picks their changes up within a minute or two. See [docs/EDITING.md](docs/EDITING.md) for the guide to give them.
 
-One-time setup:
+One-time setup (do this BEFORE merging the feature, or right after: until the tab exists, `/api/content` returns an error that is not cached, so every page view asks the sheet again. The site keeps working with its built-in text, but the extra reads count against Google's per-minute quota, which RSVPs share):
 
 1. `npm run content-template` writes `site-details-template.csv` (git-ignored).
 2. In the Google Sheet choose **File, Import, Upload** and pick the CSV. In the import dialog:
@@ -46,7 +46,9 @@ One-time setup:
 
 How it works: `GET /api/content` (the `content` function) reads the tab, validates every value, and caches it for 60 seconds; if the sheet is unavailable it keeps serving the last good copy for up to 10 minutes and then the site's built-in text. Only the details listed in `lib/content-fields.js` can be changed, and only the text itself: photos, themes, the countdown date, photo credits and the venue stay in code and Netlify settings. To make another detail editable, add it to `site/js/content.js` and to `lib/content-fields.js` (a test fails until both agree), then re-run `npm run content-template` and add the new row to the sheet.
 
-Local development: put a flat JSON map in `.dev-content.json`, for example `{"dress.code":"Black tie","announcement.text":"Hello!"}`, and run `npm run dev`.
+Local development: put a flat JSON map in `.dev-content.json`, for example `{"dress.code":"Black tie","announcement.text":"Hello!"}`, and run `npm run dev`. The local JSON files (`.dev-content.json`, `.dev-rsvps.json`) are only used when the app runs through `npm run dev`; in production a missing `GOOGLE_SHEET_ID` is an error, not a silent fallback.
+
+Troubleshooting in production: the Netlify function log shows one line per failed sheet read, for example `[content] could not load content: 400 Unable to parse range: 'Site Details'!A2:D` (the tab is missing or misnamed). Changes can take two to three minutes to show (60 s server cache, 60 s CDN cache, 60 s browser cache).
 
 ## The hidden venue
 
