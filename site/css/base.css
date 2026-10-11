@@ -16,6 +16,8 @@ p { margin: 0 0 12px; }
 .serif { font-family: 'Cormorant Garamond', serif; }
 .eyebrow { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
 .tbd { border-bottom: 1px dotted currentColor; }
+/* Text from content.js / the couple's sheet: show line breaks they typed, collapse extra spaces. */
+[data-c] { white-space: pre-line; }
 
 /* nav */
 .nav { display: flex; flex-wrap: wrap; gap: 16px 36px; align-items: center; justify-content: space-between; padding: 24px 32px; border-bottom: 1px solid var(--border); background: var(--bg); }

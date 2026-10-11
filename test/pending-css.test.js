@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const css = readFileSync(new URL('../site/css/base.css', import.meta.url), 'utf8');
+// Comments are removed first so a comment above a rule never becomes part of its selector.
+const css = readFileSync(new URL('../site/css/base.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
 function ruleFor(selector) {
   const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: m[1].split(',').map((s) => s.trim()), body: m[2] }));
@@ -15,6 +16,13 @@ test('the pending rule hides both data-c text and the footer', () => {
   assert.ok(rule, 'pending rule exists');
   assert.ok(rule.selectors.includes('.content-pending #site-footer'));
   assert.match(rule.body, /visibility:\s*hidden/);
+});
+
+test('line breaks typed into the sheet are shown (data-c text uses pre-line)', () => {
+  // Without this, "Line one\nLine two" collapses onto one line on the page.
+  const rule = ruleFor('[data-c]');
+  assert.ok(rule, 'a plain [data-c] rule exists');
+  assert.match(rule.body, /white-space:\s*pre-line/);
 });
 
 test('the pending rule has a reveal backstop of at least 2 seconds', () => {
