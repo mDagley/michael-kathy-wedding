@@ -21,7 +21,12 @@ Edit **`site/js/content.js`**. Anything in `[BRACKETS]` is a placeholder (shown 
 
 To add a third hotel or registry, copy an existing card in `travel.html` / `registry.html` and add the matching entry in `content.js`.
 
-Replace photo placeholders (`.photo-ph` blocks in `story.html` and `travel.html`) with `<img>` tags pointing at files you put in `site/assets/photos/`.
+A few placeholders and pieces of copy live directly in the HTML instead, so also search the pages for `TBD` and read through them before launch:
+
+- `rsvp.html`: the `[FORM FIELDS TBD ...]` note under the form. Delete it once the RSVP fields are final.
+- `story.html` and `travel.html`: the `[PHOTO TBD]` and `[HOTEL PHOTO TBD]` blocks. Replace each `.photo-ph` block with an `<img>` pointing at a file you put in `site/assets/photos/`.
+- `schedule.html`: the fourth timeline item ("add" circle, bound to `events.extra`). Delete that whole `<li>` if the couple has no extra event.
+- Fixed wording such as "Dinner, dancing, and candlelight" (home and schedule) and "Your presence is the greatest gift" (registry). Edit these in the HTML if the couple wants different words.
 
 ## The hidden venue
 
@@ -30,7 +35,9 @@ The venue is **never** in the site files. It lives in two environment variables,
 - Guests who RSVP yes see it immediately and it is remembered in their browser.
 - On a new device, a guest can use "Already RSVP'd? Look up the venue" on the Schedule page. It needs the **same name and email** as a saved "yes" RSVP.
 - Guests who RSVP no, and anyone who does not match, get no venue and no hint why.
-- Until the variables are set, a "yes" guest sees `[VENUE NAME TBD]` / `[STREET ADDRESS TBD]`.
+- Until the variables are set, a "yes" guest sees `[VENUE NAME TBD]` / `[STREET ADDRESS TBD]` on the confirmation. That placeholder is **never remembered** in their browser, so once you set the real venue and redeploy, they can use "Look up the venue" (or just RSVP again) to get it.
+- A **real** venue is remembered in the guest's browser. If the address changes after guests have seen it, those guests keep seeing the old one until they clear their site data or RSVP "no" and back. Confirm the address before setting `VENUE_NAME` and `VENUE_ADDRESS`, and tell guests directly if it ever changes.
+- Changing an RSVP to "no" clears the remembered venue on that device.
 
 ### Known limits (by design)
 
@@ -40,11 +47,13 @@ The venue is **never** in the site files. It lives in two environment variables,
 
 ## Themes
 
-Colors and fonts live in **`site/css/theme.css`** as CSS variables. Sage is the default; terracotta and candlelit are also defined. Add `?preview` to any URL (for example `https://yoursite.com/?preview`) to show a small theme switcher for trying them; guests never see it. To make another theme the default, change `DEFAULT_THEME` in `site/js/theme.js` and move that theme's variables into the first (`:root`) block of `theme.css`.
+Colors and fonts live in **`site/css/theme.css`** as CSS variables. Sage is the default; terracotta and candlelit are also defined. Add `?preview` to any URL (for example `https://yoursite.com/?preview`) to show a small theme switcher for trying them; it stays on for that browser session across pages, and `?preview=off` turns it off. Guests never see it. To make another theme the default, change `DEFAULT_THEME` in `site/js/theme.js` and move that theme's variables into the first (`:root`) block of `theme.css`.
 
 ## Photo credits
 
-The Vecteezy free license requires attribution. Credits come from `credits` in `site/js/content.js` and appear in every page's footer. The listed link is the generic one; check each photo's "How?" link on its Vecteezy page for its exact wording and add entries as needed. Photos must not be AI-generated and must not be wedding-specific scenes (the couple's rule); Vecteezy shows an "AI Generated" flag on each photo page.
+The Vecteezy free license requires attribution. Credits come from `credits` in `site/js/content.js` and appear in every page's footer: Vecteezy's generic snippet plus one entry per asset in use (contributor name and a link to its Vecteezy page). **When you add or remove an image, add or remove its credit entry.** Three of the five current assets are vector illustrations, not photos, which is why the footer says "Photos and art". If a photo's own "How?" link on Vecteezy asks for different wording, use that wording in the entry's `label`.
+
+Image rules from the couple: nothing AI-generated (Vecteezy shows an "AI Generated" flag on each page) and nothing specifically of weddings; generic boho textures, objects, and illustrations only. Keep web images small (resize to about 800 to 1000 px wide).
 
 ## Deploying (Netlify + Google Sheets)
 
