@@ -1,0 +1,67 @@
+/* All colors the site uses. To change a theme, edit values here only. Sage is the default. */
+:root,
+[data-theme="sage"] {
+  --bg: #f7f0e3;
+  --card: #fffaf0;
+  --border: #d9d2bd;
+  --text: #3b3a2a;
+  --text-2: #5b5a45;
+  --heading: #4f5b3d;
+  --link: #3f4a30;
+  --accent: #a8472a;
+  --band: #4f5b3d;
+  --band-text: #f7f0e3;
+  --band-text-2: #d8e0bf;
+  --band-line: #8a9a6b;
+  --btn: #a8472a;
+  --btn-text: #ffffff;
+  --btn-border: #a8472a;
+  --ph: #e4e8d2;
+  --ph-border: #8a9a6b;
+  --arch-border: #d9c9a3;
+  --error: #a12a1d;
+}
+
+[data-theme="terracotta"] {
+  --bg: #f5e6d8;
+  --card: #faf0e6;
+  --border: #e0c3a8;
+  --text: #5a2e1c;
+  --text-2: #6d4231;
+  --heading: #8f3a21;
+  --link: #5a2e1c;
+  --accent: #a8472a;
+  --band: #7a3a22;
+  --band-text: #f7f0e3;
+  --band-text-2: #f0d3bf;
+  --band-line: #c98b66;
+  --btn: #a8472a;
+  --btn-text: #ffffff;
+  --btn-border: #f7f0e3;
+  --ph: #e7c7a8;
+  --ph-border: #c98b66;
+  --arch-border: #e0c3a8;
+  --error: #a12a1d;
+}
+
+[data-theme="candlelit"] {
+  --bg: #2a1a12;
+  --card: #3a2418;
+  --border: #5a3a28;
+  --text: #f3dcc0;
+  --text-2: #e0c7a8;
+  --heading: #e0a57a;
+  --link: #e0a57a;
+  --accent: #e0a57a;
+  --band: #1f130d;
+  --band-text: #f6e3c8;
+  --band-text-2: #e0a57a;
+  --band-line: #8a6a4a;
+  --btn: #d9a066;
+  --btn-text: #2a1a12;
+  --btn-border: #d9a066;
+  --ph: #4a2f20;
+  --ph-border: #8a6a4a;
+  --arch-border: #5a3a28;
+  --error: #ff9d8f;
+}
