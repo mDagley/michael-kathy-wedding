@@ -59,3 +59,18 @@ test('setTheme swallows storage errors for a valid theme but still rejects unkno
   assert.doesNotThrow(() => setTheme(brokenStorage(), 'candlelit'));
   assert.throws(() => setTheme(brokenStorage(), 'hotpink'), /Unknown theme/);
 });
+
+test('?preview=off after ?preview turns preview off for later calls', () => {
+  for (const off of ['?preview=off', '?preview=0', '?preview=false']) {
+    const s = makeStorage();
+    assert.equal(isPreview('?preview', s), true);
+    assert.equal(isPreview(off, s), false);
+    assert.equal(isPreview('', s), false);
+  }
+});
+
+test('?preview alone still turns preview on', () => {
+  const s = makeStorage();
+  assert.equal(isPreview('?preview', s), true);
+  assert.equal(isPreview('', s), true);
+});

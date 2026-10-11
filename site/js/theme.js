@@ -5,6 +5,10 @@ const PREVIEW_KEY = 'mk_preview';
 const THEME_KEY = 'mk_theme';
 
 export function isPreview(search, storage) {
+  if (/[?&]preview=(0|off|false)(&|$)/.test(search || '')) {
+    try { storage.setItem(PREVIEW_KEY, '0'); } catch { /* ignore */ }
+    return false;
+  }
   if (/[?&]preview(=|&|$)/.test(search || '')) {
     // If storage is unavailable, preview lasts only for this page.
     try { storage.setItem(PREVIEW_KEY, '1'); } catch { /* ignore */ }

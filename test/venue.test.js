@@ -70,3 +70,27 @@ test('showVenue does not throw on a malformed venue without an address', () => {
   assert.equal(document.querySelector('[data-venue-name]').textContent, 'Hall');
   assert.equal(document.querySelector('[data-venue-address]').textContent, '');
 });
+
+test('store refuses to remember a placeholder venue', () => {
+  const s = makeStorage();
+  const store = createVenueStore(s);
+  store.set({ name: '[VENUE NAME TBD]', address: '1 Main St' });
+  assert.equal(store.get(), null);
+  store.set({ name: 'The Hall', address: '[STREET ADDRESS TBD]' });
+  assert.equal(store.get(), null);
+  assert.equal(s.getItem('mk_venue'), null);
+});
+
+test('a pre-stored placeholder venue reads as absent', () => {
+  const s = makeStorage();
+  s.setItem('mk_venue', JSON.stringify({ name: '[VENUE NAME TBD]', address: '[STREET ADDRESS TBD]' }));
+  assert.equal(createVenueStore(s).get(), null);
+  s.setItem('mk_venue', JSON.stringify({ name: 'The Hall', address: '[STREET ADDRESS TBD]' }));
+  assert.equal(createVenueStore(s).get(), null);
+});
+
+test('a real venue still round-trips', () => {
+  const store = createVenueStore(makeStorage());
+  store.set({ name: 'Rosewood Barn', address: '12 Lane Rd' });
+  assert.deepEqual(store.get(), { name: 'Rosewood Barn', address: '12 Lane Rd' });
+});

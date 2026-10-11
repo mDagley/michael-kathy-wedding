@@ -34,9 +34,9 @@ export function renderChrome(doc, content, currentPage) {
 
   const footHost = doc.getElementById('site-footer');
   if (footHost) {
-    const credits = el(doc, 'div', { class: 'credits' }, 'Photos and art via ');
+    const credits = el(doc, 'div', { class: 'credits' }, 'Photos and art: ');
     content.credits.forEach((c, i) => {
-      if (i > 0) credits.append(', ');
+      if (i > 0) credits.append(' · ');
       credits.append(el(doc, 'a', { href: c.url, rel: 'noopener' }, c.label));
     });
     const deadline = el(doc, 'span', { class: flagIfPlaceholder(content.rsvp.deadline) }, content.rsvp.deadline);

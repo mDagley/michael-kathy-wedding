@@ -54,9 +54,14 @@ export const content = {
     { id: 'story', label: 'Our Story', href: 'story.html' },
     { id: 'rsvp', label: 'RSVP', href: 'rsvp.html', cta: true },
   ],
-  // Vecteezy free license requires attribution. Verify the exact snippet on each photo's page
-  // ("How?" link) and update/add entries here; the footer renders this list on every page.
+  // Vecteezy free license requires crediting each item's contributor with a link to its page.
+  // The generic entry stays first; every used asset has its own entry after it.
   credits: [
     { label: 'Boho Stock photos by Vecteezy', url: 'https://www.vecteezy.com/free-photos/boho' },
+    { label: 'Macrame wall panel by Natallia Krechka', url: 'https://www.vecteezy.com/photo/3280614-beautiful-boho-macrame-wall-panel-for-a-cozy-atmosphere' },
+    { label: 'Terra cotta fabric by Kathryn Swezy', url: 'https://www.vecteezy.com/photo/52558004-gauze-bohemian-terra-cotta-fabric-background' },
+    { label: 'Boho rainbows by FARZANA AFROZ', url: 'https://www.vecteezy.com/vector-art/68765270-baby-rainbows-boho-rainbow-elements-for-baby-kids-bedding' },
+    { label: 'Boho vase illustration by Md Meharab Hossen Shagor', url: 'https://www.vecteezy.com/vector-art/86722658-boho-ceramic-vase-with-tropical-leaves-abstract-modern' },
+    { label: 'Hands holding flowers by Panji Dwi Cahya', url: 'https://www.vecteezy.com/vector-art/59494896-elegant-feminine-hands-holding-flowers-botanical' },
   ],
 };

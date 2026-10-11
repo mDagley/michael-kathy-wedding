@@ -48,3 +48,15 @@ test('real (non-bracketed) deadline and hashtag are not highlighted', () => {
   renderChrome(doc, real, 'home');
   assert.equal(doc.querySelectorAll('#site-footer .tbd').length, 0);
 });
+
+test('footer renders one vecteezy link per credit, separated by a middle dot', () => {
+  const doc = setup();
+  renderChrome(doc, content, 'home');
+  const credits = doc.querySelector('#site-footer .credits');
+  const links = [...credits.querySelectorAll('a')];
+  assert.equal(content.credits.length, 6);
+  assert.equal(links.length, 6);
+  content.credits.forEach((c) => assert.ok(c.url.startsWith('https://www.vecteezy.com/'), c.url));
+  assert.ok(credits.textContent.startsWith('Photos and art: '));
+  assert.equal(credits.textContent.split(' \u00b7 ').length, 6);
+});

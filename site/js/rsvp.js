@@ -58,6 +58,7 @@ export function initRsvpForm(doc, { fetchFn, store, contact }) {
         yes.setAttribute('tabindex', '-1');
         yes.focus();
       } else {
+        store.clear();
         no.hidden = false;
         yes.hidden = true;
         no.setAttribute('tabindex', '-1');
@@ -93,6 +94,13 @@ export function initLookup(doc, { fetchFn, store }) {
       if (res.ok && data.ok && data.found && data.venue) {
         store.set(data.venue);
         showVenue(doc, data.venue);
+        const revealed = doc.querySelector('[data-venue-state="revealed"]');
+        if (revealed) {
+          revealed.setAttribute('tabindex', '-1');
+          revealed.focus();
+        }
+      } else if (res.status === 429) {
+        msg.textContent = 'Too many attempts. Please wait a few minutes and try again.';
       } else {
         msg.textContent = "We couldn't find a yes RSVP for that name and email. Check the spelling, or RSVP below.";
       }
