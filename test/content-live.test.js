@@ -34,3 +34,26 @@ test('gives up after the timeout and aborts the request', async () => {
   assert.ok(Date.now() - started < 500);
   assert.equal(aborted, true);
 });
+
+test('a browser without AbortController yields null instead of rejecting', async () => {
+  const original = globalThis.AbortController;
+  globalThis.AbortController = undefined;
+  try {
+    const result = await loadLiveContent({ fetchFn: async () => respond(200, { ok: true, values: { a: 'b' } }) });
+    assert.equal(result, null);
+  } finally {
+    globalThis.AbortController = original;
+  }
+});
+
+test('the timer is cleared after success and after a timeout', async () => {
+  const timeouts = () => process.getActiveResourcesInfo().filter((r) => r === 'Timeout').length;
+  const baseline = timeouts();
+  await loadLiveContent({ fetchFn: async () => respond(200, { ok: true, values: {} }), timeoutMs: 5000 });
+  assert.equal(timeouts(), baseline);
+  const hang = (url, { signal }) => new Promise((resolve, reject) => {
+    signal.addEventListener('abort', () => reject(new Error('aborted')));
+  });
+  await loadLiveContent({ fetchFn: hang, timeoutMs: 20 });
+  assert.equal(timeouts(), baseline);
+});

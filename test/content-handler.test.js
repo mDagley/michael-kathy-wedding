@@ -14,7 +14,7 @@ function build({ load, startAt = 1_000_000, limiter, loadTimeoutMs } = {}) {
     source,
     now: () => t,
     limiter: limiter || createLimiter({ max: 1000, windowMs: 1000 }),
-    ...(loadTimeoutMs ? { loadTimeoutMs } : {}),
+    ...(loadTimeoutMs !== undefined ? { loadTimeoutMs } : {}),
   });
   return { handler, calls, advance: (ms) => { t += ms; }, setTime: (v) => { t = v; } };
 }
@@ -154,6 +154,13 @@ async function withLog(fn) {
   try { await fn(logged); } finally { console.error = orig; }
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const tick = () => new Promise((r) => setImmediate(r)); // let already-settled promises run their callbacks
+// A promise whose outcome the TEST decides, and when.
+function deferred() {
+  let resolve; let reject;
+  const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
 const val = (res) => JSON.parse(res.body).values['dress.code'];
 const GENERIC = { ok: false, error: 'Content is temporarily unavailable.' };
 
@@ -163,7 +170,7 @@ test('LOAD_TIMEOUT_MS defaults to 6 seconds', () => {
 
 test('timeout: a hung read with no cache answers 503 quickly and generically', async () => {
   await withLog(async (logged) => {
-    const { handler } = build({ load: () => new Promise(() => {}), loadTimeoutMs: 30 });
+    const { handler } = build({ load: () => new Promise(() => {}), loadTimeoutMs: 50 });
     const started = Date.now();
     const res = await handler(get());
     assert.ok(Date.now() - started < 500);
@@ -179,7 +186,7 @@ test('timeout: a hung refresh serves the stale data quickly', async () => {
   await withLog(async () => {
     const { handler, advance } = build({
       load: (n) => (n === 1 ? { 'dress.code': 'Black tie' } : new Promise(() => {})),
-      loadTimeoutMs: 30,
+      loadTimeoutMs: 50,
     });
     await handler(get());
     advance(FRESH_MS + 1);
@@ -195,7 +202,7 @@ test('timeout: inflight is cleared so a later request loads again and can recove
   await withLog(async () => {
     const { handler, calls, advance } = build({
       load: (n) => (n === 1 ? new Promise(() => {}) : { 'dress.code': 'Recovered' }),
-      loadTimeoutMs: 30,
+      loadTimeoutMs: 50,
     });
     assert.equal((await handler(get())).statusCode, 503);
     assert.equal(calls.load, 1);
@@ -209,17 +216,17 @@ test('timeout: inflight is cleared so a later request loads again and can recove
 
 test('timeout: a load that finishes late does not replace the cache', async () => {
   await withLog(async () => {
+    const late = deferred();
     const { handler, calls, advance } = build({
-      load: (n) => {
-        if (n === 1) return { 'dress.code': 'Black tie' };
-        return new Promise((r) => setTimeout(() => r({ 'dress.code': 'LATE' }), 80));
-      },
-      loadTimeoutMs: 30,
+      load: (n) => (n === 1 ? { 'dress.code': 'Black tie' } : late.promise),
+      loadTimeoutMs: 50,
     });
     await handler(get());
     advance(FRESH_MS + 1);
     assert.equal(val(await handler(get())), 'Black tie'); // stale, refresh timed out
-    await sleep(150); // the late load resolves meanwhile
+    late.resolve({ 'dress.code': 'LATE' }); // the late load resolves only now, after the timeout
+    await tick();
+    await tick();
     const res = await handler(get()); // clock unchanged: inside the retry window
     assert.equal(res.statusCode, 200);
     assert.equal(val(res), 'Black tie');
@@ -229,12 +236,19 @@ test('timeout: a load that finishes late does not replace the cache', async () =
 
 test('timeout: a late rejection after the timeout is swallowed', async () => {
   await withLog(async () => {
-    const { handler } = build({
-      load: () => new Promise((_, rej) => setTimeout(() => rej(new Error('late boom')), 60)),
-      loadTimeoutMs: 20,
-    });
-    assert.equal((await handler(get())).statusCode, 503);
-    await sleep(120);
+    const late = deferred();
+    const unhandled = [];
+    const onUnhandled = (reason) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      const { handler } = build({ load: () => late.promise, loadTimeoutMs: 50 });
+      assert.equal((await handler(get())).statusCode, 503);
+      late.reject(new Error('late boom')); // fails only after the timeout already answered
+      await sleep(50); // generous: unhandled rejections are reported within a tick or two
+      assert.deepEqual(unhandled, []);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
   });
 });
 
@@ -335,5 +349,28 @@ test('concurrent requests sharing a rejecting refresh all get the same generic 5
     }
     assert.equal(calls.load, 1);
     assert.equal(logged.length, 1);
+  });
+});
+
+test('logging: a plain string rejected on two separate attempts logs once per attempt', async () => {
+  await withLog(async (logged) => {
+    const { handler, calls, advance } = build({ load: () => { throw 'plain failure'; } }); // eslint-disable-line no-throw-literal
+    await handler(get());
+    advance(RETRY_MS + 1);
+    await handler(get());
+    assert.equal(calls.load, 2);
+    assert.equal(logged.length, 2);
+  });
+});
+
+test('logging: the same Error object rejected on two attempts logs once per attempt', async () => {
+  await withLog(async (logged) => {
+    const shared = new Error('same instance');
+    const { handler, calls, advance } = build({ load: () => { throw shared; } });
+    await handler(get());
+    advance(RETRY_MS + 1);
+    await handler(get());
+    assert.equal(calls.load, 2);
+    assert.equal(logged.length, 2);
   });
 });

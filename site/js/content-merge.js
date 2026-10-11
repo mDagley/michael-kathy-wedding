@@ -1,4 +1,6 @@
 // site/js/content-merge.js
+// SECURITY: merged values may contain arbitrary text or HTML. They must only ever be rendered through
+// textContent / setAttribute('href') after the https check, as render.js does. Never use innerHTML.
 // Applies sheet values on top of the built-in content. Only strings at paths that ALREADY exist
 // as strings in the defaults can change, so the sheet cannot add structure, scripts, or links the
 // developer did not put there. nav and credits are developer-owned.

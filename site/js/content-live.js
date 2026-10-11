@@ -2,9 +2,10 @@
 // Fetches the couple's edits. Resolves to a { key: value } map, or null on ANY problem
 // (offline, slow, error status, bad JSON), in which case the built-in text simply stays.
 export async function loadLiveContent({ fetchFn, timeoutMs = 1500, url = '/api/content' }) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timer;
   try {
+    const controller = new AbortController(); // inside the try: a browser without it yields null
+    timer = setTimeout(() => controller.abort(), timeoutMs);
     const res = await fetchFn(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
     if (!res.ok) return null;
     const data = await res.json();

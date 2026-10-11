@@ -19,8 +19,10 @@ function boot() {
   const root = document.documentElement;
   initTheme(window);
 
-  // Show the built-in text right away (hidden by CSS until the couple's edits arrive or 1.5 s pass,
-  // so guests never see a flash of "[TBD]" replaced by the real text).
+  // Paint the built-in text right away. While content-pending is set, CSS hides the text and the footer
+  // until the couple's edits arrive or about 1.5 s pass (no flash of "[TBD]" replaced by real text).
+  // A 2.5 s CSS backstop reveals everything even if scripts fail. The announcement banner, if any,
+  // only appears when live content arrives.
   let current = content;
   root.classList.add('content-pending');
   const paint = () => {

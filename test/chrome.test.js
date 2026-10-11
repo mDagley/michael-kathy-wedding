@@ -109,3 +109,24 @@ test('content without an announcement key does not break rendering', () => {
   assert.doesNotThrow(() => renderChrome(doc, rest, 'home'));
   assert.equal(doc.querySelector('.announcement'), null);
 });
+
+test('rendering twice for the same page keeps the very same nav element', () => {
+  const doc = setup();
+  renderChrome(doc, content, 'travel');
+  const first = doc.querySelector('#site-nav nav');
+  renderChrome(doc, content, 'travel');
+  const second = doc.querySelector('#site-nav nav');
+  assert.equal(second, first);
+});
+
+test('rendering with a different page id rebuilds the nav and updates aria-current', () => {
+  const doc = setup();
+  renderChrome(doc, content, 'travel');
+  const first = doc.querySelector('#site-nav nav');
+  renderChrome(doc, content, 'home');
+  const second = doc.querySelector('#site-nav nav');
+  assert.notEqual(second, first);
+  const current = [...doc.querySelectorAll('#site-nav .links a[aria-current="page"]')];
+  assert.equal(current.length, 1);
+  assert.equal(current[0].getAttribute('href'), content.nav.find((n) => n.id === 'home').href);
+});

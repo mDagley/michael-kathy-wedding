@@ -214,3 +214,35 @@ test('file source: empty file, BOM, and non-scalar values', async () => {
   assert.deepEqual(await createFileContentSource(write('bom.json', '\uFEFF{"dress.code":"Bom"}')).load(), { 'dress.code': 'Bom' });
   assert.deepEqual(await createFileContentSource(write('obj.json', '{"dress.code":{"x":1},"dress.note":"ok","faq.plusOne":[1],"faq.children":null}')).load(), { 'dress.note': 'ok' });
 });
+
+const UNPAIRED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+test('a cap that cuts an emoji in half leaves no lone surrogate', () => {
+  let out;
+  assert.doesNotThrow(() => { out = parseContentRows([row('dress.code', '\u200B'.repeat(319) + '\u{1F600}')]); });
+  const value = out['dress.code'];
+  assert.equal(value === undefined || !UNPAIRED.test(value), true);
+});
+
+test('a lone surrogate from a JSON file source is cleaned', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  const p = join(dir, 'lone.json');
+  writeFileSync(p, String.raw`{"dress.code":"Bla\ud83dck tie\ude00"}`); // JSON escapes decode to lone surrogates
+  assert.deepEqual(await createFileContentSource(p).load(), { 'dress.code': 'Black tie' });
+});
+
+test('a url cell longer than the raw cap is dropped, not cut down to a prefix', () => {
+  const longCell = 'https://x.com/pay' + ' '.repeat(2500) + '?to=me';
+  assert.deepEqual(parseContentRows([row('travel.hotels.0.link', longCell)]), {});
+});
+
+test('a url containing a backslash is rejected', () => {
+  assert.deepEqual(parseContentRows([row('travel.hotels.0.link', 'https://evil.com\@x')]), {});
+});
+
+test('duplicate keys: an invalid first url does not claim the key', () => {
+  assert.deepEqual(
+    parseContentRows([row('travel.hotels.0.link', 'javascript:alert(1)'), row('travel.hotels.0.link', 'https://good.com/a')]),
+    { 'travel.hotels.0.link': 'https://good.com/a' },
+  );
+});

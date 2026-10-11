@@ -38,3 +38,14 @@ test('applyContent sets real links and neutralizes placeholder links', () => {
   assert.equal(document.getElementById('p').getAttribute('href'), '#');
   assert.equal(document.getElementById('p').classList.contains('tbd'), true);
 });
+
+test('a link that becomes valid loses the placeholder styling', () => {
+  const { document } = new JSDOM('<a id="l" data-c-href="link">go</a>').window;
+  const el = document.getElementById('l');
+  applyContent(document, { link: '[LINK TBD]' });
+  assert.equal(el.getAttribute('href'), '#');
+  assert.equal(el.classList.contains('tbd'), true);
+  applyContent(document, { link: 'https://example.com/real' });
+  assert.equal(el.getAttribute('href'), 'https://example.com/real');
+  assert.equal(el.classList.contains('tbd'), false);
+});
