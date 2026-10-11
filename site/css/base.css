@@ -103,6 +103,9 @@ p { margin: 0 0 12px; }
 
 /* announcement banner (text comes from the couple's sheet; empty means no banner) */
 .announcement { background: var(--band); color: var(--band-text); text-align: center; padding: 10px 20px; font-size: 14px; letter-spacing: 1px; line-height: 1.4; border-bottom: 1px solid var(--band-line); overflow-wrap: anywhere; }
+/* Hide text until live content arrives; the animation reveals it after 2.5 s even if scripts fail. */
+@keyframes content-reveal { to { visibility: visible; } }
+.content-pending [data-c] { visibility: hidden; animation: content-reveal 0s linear 2.5s forwards; }
 
 /* footer and switcher */
 .footer { border-top: 1px solid var(--border); text-align: center; padding: 24px; font-size: 14px; letter-spacing: 2px; color: var(--text-2); }

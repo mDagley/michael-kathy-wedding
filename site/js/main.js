@@ -7,6 +7,8 @@ import { startCountdown } from './countdown.js';
 import { createVenueStore } from './venue-store.js';
 import { showVenue } from './venue-ui.js';
 import { initRsvpForm, initLookup } from './rsvp.js';
+import { mergeContent } from './content-merge.js';
+import { loadLiveContent } from './content-live.js';
 
 function safeStorage() {
   try { return window.localStorage; } catch { return { getItem: () => null, setItem() {}, removeItem() {} }; }
@@ -14,9 +16,18 @@ function safeStorage() {
 
 function boot() {
   const page = document.body.dataset.page;
+  const root = document.documentElement;
   initTheme(window);
-  renderChrome(document, content, page);
-  applyContent(document, content);
+
+  // Show the built-in text right away (hidden by CSS until the couple's edits arrive or 1.5 s pass,
+  // so guests never see a flash of "[TBD]" replaced by the real text).
+  let current = content;
+  root.classList.add('content-pending');
+  const paint = () => {
+    renderChrome(document, current, page);
+    applyContent(document, current);
+  };
+  paint();
 
   const countdown = document.querySelector('[data-countdown]');
   if (countdown) startCountdown(countdown);
@@ -25,8 +36,19 @@ function boot() {
   showVenue(document, store.get());
 
   const fetchFn = (...args) => window.fetch(...args);
-  initRsvpForm(document, { fetchFn, store, contact: content.couple.contact });
+  initRsvpForm(document, { fetchFn, store, contact: () => current.couple.contact });
   initLookup(document, { fetchFn, store });
+
+  // The couple's edits from the Google Sheet. Any failure leaves the built-in text in place.
+  loadLiveContent({ fetchFn })
+    .then((values) => {
+      if (values) {
+        current = mergeContent(content, values);
+        paint();
+      }
+    })
+    .catch(() => {})
+    .finally(() => root.classList.remove('content-pending'));
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
