@@ -58,3 +58,33 @@ test('unexpected errors return a generic 500 and do not leak details', async () 
   assert.equal(res.statusCode, 500);
   assert.equal(res.body.includes('secret'), false);
 });
+
+test('base64-encoded bodies are decoded', async () => {
+  const b64 = Buffer.from(JSON.stringify(body), 'utf8').toString('base64');
+  const res = await build()({ ...post(''), body: b64, isBase64Encoded: true });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(JSON.parse(res.body), { ok: true, attending: true, venue: VENUE });
+});
+
+test('oversize base64-decoded bodies get 413', async () => {
+  const b64 = Buffer.from(JSON.stringify({ ...body, notes: 'x'.repeat(20000) }), 'utf8').toString('base64');
+  const res = await build()({ ...post(''), body: b64, isBase64Encoded: true });
+  assert.equal(res.statusCode, 413);
+});
+
+test('unknown kind throws at construction', () => {
+  assert.throws(() => createFunction('rsvps'));
+});
+
+test('lookup kind works end to end with the same sheet', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'fn-'));
+  const sheet = createFileSheet(join(dir, 's.json'));
+  const limiter = createLimiter({ max: 100, windowMs: 1000 });
+  const rsvp = createFunction('rsvp', { sheet, venue: VENUE, limiter });
+  const lookup = createFunction('lookup', { sheet, venue: VENUE, limiter });
+  assert.equal((await rsvp(post(body))).statusCode, 200);
+  const hit = await lookup(post({ name: 'ada lovelace', email: 'ADA@example.com' }));
+  assert.deepEqual(JSON.parse(hit.body), { ok: true, found: true, venue: VENUE });
+  const miss = await lookup(post({ name: 'Wrong Name', email: 'ada@example.com' }));
+  assert.deepEqual(JSON.parse(miss.body), { ok: true, found: false });
+});
