@@ -2,6 +2,8 @@
 // ALL wedding facts live here. Anything in [BRACKETS] is a placeholder: replace the whole
 // string (including the brackets) with the real text. Placeholders render highlighted.
 export const content = {
+  // Banner shown above the menu on every page. Empty string means no banner.
+  announcement: { text: '' },
   couple: {
     names: 'Michael & Kathy',
     date: 'August 21, 2027',
