@@ -1,0 +1,11 @@
+node_modules/
+.env
+.dev-rsvps.json
+.netlify/
+.superpowers/
+.playwright-mcp/
+# large original downloads at the project root only (the leading slash matters:
+# the web-sized copies under site/assets/ must stay tracked)
+/assets/vecteezy_*
+/assets/photos/
+/assets/illustrations/
