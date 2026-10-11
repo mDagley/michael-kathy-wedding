@@ -11,9 +11,9 @@ const SITE = new URL('../site/', import.meta.url);
 const sitePath = (rel) => new URL(rel, SITE);
 const pages = readdirSync(SITE).filter((f) => f.endsWith('.html'));
 const navIds = content.nav.map((n) => n.id);
-// Pages that later tasks create; links to them are allowed to dangle until their task lands.
-// Remove an entry here as soon as its page exists. (Task 12 removes the last one.)
-const NOT_BUILT_YET = new Set(['rsvp.html']);
+// Every page now exists, so this set is empty and links to missing pages fail the test.
+// List a page filename here only if a later page is added whose links may dangle until it lands.
+const NOT_BUILT_YET = new Set([]);
 
 test('the site has at least one page', () => {
   assert.ok(pages.length > 0);
