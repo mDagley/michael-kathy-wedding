@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <title>RSVP · Michael &amp; Kathy</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body data-page="rsvp">
+  <div id="site-nav"></div>
+  <main>
+    <header class="band"><h1 class="script">RSVP</h1></header>
+    <div class="container container--narrow">
+      <p class="center">Please reply by <strong data-c="rsvp.deadline"></strong>.<br>Guests who say yes will see the venue as soon as they submit.</p>
+
+      <form id="rsvp-form" class="form" style="margin-top:32px" novalidate>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input id="name" type="text" name="name" autocomplete="name" required>
+          <p class="error" data-error="name" role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" autocomplete="email" required>
+          <p class="error" data-error="email" role="alert"></p>
+        </div>
+        <div class="field">
+          <fieldset>
+            <legend>Will you join us?</legend>
+            <label class="radio"><input type="radio" name="attending" value="yes"> Joyfully accepts</label>
+            <label class="radio"><input type="radio" name="attending" value="no"> Regretfully declines</label>
+          </fieldset>
+          <p class="error" data-error="attending" role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="dietary">Dietary needs</label>
+          <input id="dietary" type="text" name="dietary" placeholder="Optional">
+          <p class="error" data-error="dietary" role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="notes">A note for the couple</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Optional"></textarea>
+          <p class="error" data-error="notes" role="alert"></p>
+        </div>
+        <!-- Honeypot: hidden from people, bots fill it in. -->
+        <div class="hp" aria-hidden="true">
+          <label for="website">Leave this empty</label>
+          <input id="website" type="text" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <p class="status tbd">[FORM FIELDS TBD: meal choice, plus-one, and song requests are pending Michael and Kathy.]</p>
+        <p id="rsvp-error" class="error" role="alert" hidden></p>
+        <div class="center"><button id="submit" class="btn" type="submit">Send RSVP</button></div>
+      </form>
+
+      <section id="rsvp-yes" class="card" style="margin-top:32px" hidden>
+        <h2 class="script" style="font-size:56px;color:var(--heading)">We can't wait to see you</h2>
+        <p>Thank you. Your RSVP is in.</p>
+        <div class="venue-card venue-card--open">
+          <div class="eyebrow">Your venue</div>
+          <div class="big" data-venue-name></div>
+          <p data-venue-address></p>
+          <p><span data-c="couple.dateLong"></span> · Ceremony <span data-c="events.ceremony.time"></span></p>
+        </div>
+        <p style="margin-top:20px"><a class="btn" href="schedule.html">See the schedule</a></p>
+      </section>
+
+      <section id="rsvp-no" class="card" style="margin-top:32px" hidden>
+        <h2 class="script" style="font-size:48px;color:var(--heading)">We'll miss you</h2>
+        <p>Thank you for letting us know. We'll be thinking of you on the day.</p>
+      </section>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

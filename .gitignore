@@ -4,8 +4,8 @@ node_modules/
 .netlify/
 .superpowers/
 .playwright-mcp/
-# large original downloads at the project root only (the leading slash matters:
-# the web-sized copies under site/assets/ must stay tracked)
-/assets/vecteezy_*
-/assets/photos/
-/assets/illustrations/
+# source materials at the project root only (the leading slash matters: the web-sized
+# copies the site uses live under site/assets/ and must stay tracked)
+/assets/
+/Details.txt
+/IMG_*.png

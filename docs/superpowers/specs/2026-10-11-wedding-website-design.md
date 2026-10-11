@@ -37,14 +37,14 @@ All content lives in a single content file, so filling in a `TBD` never means ed
 
 Photo style rules from the couple: no AI-generated images (Vecteezy shows an "AI Generated" flag on each photo page, and the Non-AI filter helps), and no wedding-specific scenes. Use generic, vibey boho imagery such as textures, fabrics, lanterns, and natural objects.
 
-Stock photos come from Vecteezy's free license, which requires attribution. Every page shares one footer with a "Photo credits" line that names the photographer (or contributor) and links to each Vecteezy photo page used on the site. Photos are tracked in a credits list in the content file, so adding or removing a photo updates the footer. The couple's own engagement photos need no credit line.
+Stock photos come from Vecteezy's free license, which requires attribution. Every page shares one footer with a credits line that names the contributor and links to the Vecteezy page of each asset used on the site (plus Vecteezy's generic "Boho Stock photos by Vecteezy" snippet). Several used assets are vector illustrations rather than photos, so the lead-in reads "Photos and art". Photos are tracked in a credits list in the content file, so adding or removing a photo updates the footer. The couple's own engagement photos need no credit line.
 
 ## Theme system
 
-- `theme.css` defines three themes as CSS variables: Sunset Terracotta (default), Romantic Rustic Sage, Candlelit Evening.
+- `theme.css` defines three themes as CSS variables: Romantic Rustic Sage (default, sage-led with terracotta accents), Sunset Terracotta, Candlelit Evening.
 - Variables cover colors (`--bg`, `--text`, `--accent`, `--accent-2`) and fonts (`--font-heading`, `--font-script`). Pages never use hard-coded colors or fonts.
 - SVG assets use `currentColor`, so they recolor with the theme.
-- **Preview switcher:** a floating "Preview theme" control (A/B/C) that appears only when the URL contains `?preview`. The choice persists in the browser across pages. Removing it before launch means deleting one script.
+- **Preview switcher:** a floating "Preview theme" control (A/B/C) that appears only when the URL contains `?preview`. The choice persists in the browser across pages for the rest of the session, and `?preview=off` turns preview mode off again. Guests never see the control because it only exists in preview mode; deleting the switcher code is optional (the same module also applies the default theme, so keep that part).
 - Known swap risks: text contrast on the dark theme, photos color-matched to one palette, script-font width in the hero.
 
 ## RSVP and hidden venue
