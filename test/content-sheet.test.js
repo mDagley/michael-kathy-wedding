@@ -107,8 +107,110 @@ test('createContentSource never falls back to a local file in production without
   assert.throws(() => createContentSource({ CONTEXT: 'production' }), /GOOGLE_SHEET_ID/);
 });
 
-test('createContentSource builds a Google source when credentials are present, and a file source in dev', () => {
+
+test('createContentSource (dev) reads DEV_CONTENT_PATH through the file source', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  const path = join(dir, 'c.json');
+  writeFileSync(path, JSON.stringify({ 'dress.code': 'From file' }));
+  assert.deepEqual(await createContentSource({ DEV_CONTENT_PATH: path }).load(), { 'dress.code': 'From file' });
+});
+
+function mockClient(calls) {
+  return { spreadsheets: { values: { get: async (p) => { calls.push(p); return { data: { values: [row('dress.code', 'Sheet value')] } }; } } } };
+}
+
+test('createContentSource (Google) uses the injected client, sheet id and default tab', async () => {
+  const calls = [];
+  const source = createContentSource({ GOOGLE_SHEET_ID: 'SHEET9' }, { sheetsClient: mockClient(calls) });
+  assert.deepEqual(await source.load(), { 'dress.code': 'Sheet value' });
+  assert.deepEqual(calls, [{ spreadsheetId: 'SHEET9', range: "'Site Details'!A2:D" }]);
+});
+
+test('createContentSource honors CONTENT_TAB', async () => {
+  const calls = [];
+  const source = createContentSource({ GOOGLE_SHEET_ID: 'SHEET9', CONTENT_TAB: 'Wedding Info' }, { sheetsClient: mockClient(calls) });
+  await source.load();
+  assert.deepEqual(calls, [{ spreadsheetId: 'SHEET9', range: "'Wedding Info'!A2:D" }]);
+});
+
+test('createContentSource in production builds with a sheet id and throws without one', () => {
   const g = createContentSource({ CONTEXT: 'production', GOOGLE_SHEET_ID: 'abc', GOOGLE_CLIENT_EMAIL: 'svc@example.iam.gserviceaccount.com', GOOGLE_PRIVATE_KEY: 'not-a-real-key' });
   assert.equal(typeof g.load, 'function');
-  assert.equal(typeof createContentSource({}).load, 'function');
+  assert.throws(() => createContentSource({ CONTEXT: 'production' }), /GOOGLE_SHEET_ID/);
+});
+
+// ---- hardening ----
+const timed = (rows) => { const t = performance.now(); const out = parseContentRows(rows); return [out, performance.now() - t]; };
+
+test('pathological cells parse in linear time', () => {
+  const cases = [
+    [' '.repeat(50000), {}],
+    [' '.repeat(1000000), {}],
+    // The raw cell is cut at maxLength * 4 first, so the "x" past that point is never seen.
+    [' '.repeat(50000) + 'x', {}],
+    ['   x', { 'dress.code': 'x' }],
+    [' '.repeat(100) + 'x', { 'dress.code': 'x' }],
+    ['\n '.repeat(500000), {}],
+    ['a' + ' '.repeat(50000) + 'b', { 'dress.code': 'a' }],
+    ['a' + ' '.repeat(1000000) + 'b', { 'dress.code': 'a' }],
+  ];
+  for (const [value, expected] of cases) {
+    const [out, ms] = timed([row('dress.code', value)]);
+    assert.deepEqual(out, expected);
+    assert.ok(ms < 100, `took ${ms.toFixed(1)} ms for length ${value.length}`);
+  }
+});
+
+test('hidden and disguising characters are removed from every field', () => {
+  const hidden = ['\x80', '\x9F', '\u00AD', '\u200B', '\u200C', '\u200E', '\u200F', '\u202A', '\u202E', '\u2060', '\u2064', '\u2066', '\u2069', '\uFEFF'];
+  for (const ch of hidden) {
+    assert.equal(parseContentRows([row('dress.code', `Black${ch}tie`)])['dress.code'], 'Blacktie', JSON.stringify(ch));
+    assert.deepEqual(parseContentRows([row('dress.code', ch + ch)]), {}, 'only-hidden ' + JSON.stringify(ch));
+  }
+});
+
+test('zero-width joiner is preserved so family emoji stay intact', () => {
+  const family = '\u{1F468}\u200D\u{1F469}\u200D\u{1F467}';
+  assert.equal(parseContentRows([row('dress.code', family)])['dress.code'], family);
+});
+
+test('url validation: accepted forms', () => {
+  const k = 'travel.hotels.0.link';
+  assert.equal(parseContentRows([row(k, 'https://example.com/a?b=c')])[k], 'https://example.com/a?b=c');
+  assert.equal(parseContentRows([row(k, 'HTTPS://Example.com/Path')])[k], 'https://Example.com/Path');
+  assert.equal(parseContentRows([row(k, 'http://example.com')])[k], 'http://example.com');
+  assert.equal(parseContentRows([row(k, 'https://\u200Bevil.com')])[k], 'https://evil.com');
+  assert.equal(parseContentRows([row(k, 'https://x.com/\u202Egpj.exe')])[k], 'https://x.com/gpj.exe');
+});
+
+test('url validation: rejected forms', () => {
+  const k = 'travel.hotels.0.link';
+  for (const bad of ['https://user:pass@evil.com', 'https://user@evil.com', 'https://\u0430pple.com', 'https://exa mple.com', 'https://x.com/`x`',
+    'javascript:alert(1)', '//evil.com', 'https:\\evil.com', 'https://', 'https://x.com/<b>', 'https://x.com/a\u00e9', 'https://' + 'a'.repeat(600)]) {
+    assert.deepEqual(parseContentRows([row(k, bad)]), {}, bad);
+  }
+});
+
+test('truncation never splits a surrogate pair', () => {
+  const out = parseContentRows([row('couple.city', 'a'.repeat(59) + '\u{1F600}\u{1F600}')])['couple.city'];
+  assert.ok(!/[\ud800-\udfff]/.test(out.replace(/[\ud800-\udbff][\udc00-\udfff]/g, '')));
+  assert.equal(out, 'a'.repeat(59) + '\u{1F600}');
+});
+
+test('duplicate keys: the first row with a usable value wins', () => {
+  assert.deepEqual(parseContentRows([row('dress.code', ''), row('dress.code', 'Second')]), { 'dress.code': 'Second' });
+  assert.deepEqual(parseContentRows([row('dress.code', 'First'), row('dress.code', 'Second')]), { 'dress.code': 'First' });
+});
+
+test('multiline fields keep line breaks and convert U+2028/2029 to newlines', () => {
+  assert.equal(parseContentRows([row('faq.plusOne', 'a\u2028b\u2029c')])['faq.plusOne'], 'a\nb\nc');
+});
+
+test('file source: empty file, BOM, and non-scalar values', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  const write = (name, text) => { const p = join(dir, name); writeFileSync(p, text); return p; };
+  assert.deepEqual(await createFileContentSource(write('empty.json', '')).load(), {});
+  assert.deepEqual(await createFileContentSource(write('ws.json', ' \n ')).load(), {});
+  assert.deepEqual(await createFileContentSource(write('bom.json', '\uFEFF{"dress.code":"Bom"}')).load(), { 'dress.code': 'Bom' });
+  assert.deepEqual(await createFileContentSource(write('obj.json', '{"dress.code":{"x":1},"dress.note":"ok","faq.plusOne":[1],"faq.children":null}')).load(), { 'dress.note': 'ok' });
 });
