@@ -35,3 +35,10 @@ test('the pending rule has a reveal backstop of at least 2 seconds', () => {
   assert.ok(frames, '@keyframes content-reveal exists');
   assert.match(frames[1], /visibility:\s*visible/);
 });
+
+test('the announcement banner uses the theme band tokens and no literal colors', () => {
+  const rule = ruleFor('.announcement');
+  assert.ok(rule, '.announcement rule exists');
+  for (const token of ['--band', '--band-text', '--band-line']) assert.ok(rule.body.includes(`var(${token})`), token);
+  assert.doesNotMatch(rule.body, /#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(/);
+});

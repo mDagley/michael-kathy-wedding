@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeContent } from '../site/js/content-merge.js';
 import { content } from '../site/js/content.js';
+import { parseContentRows } from '../lib/content-sheet.js';
 
 const defaults = {
   a: { b: 'built-in', n: 5, list: [{ name: 'one' }, { name: 'two' }] },
@@ -42,9 +43,9 @@ test('prototype pollution attempts do nothing', () => {
   assert.equal(Object.prototype.polluted, undefined);
 });
 
-test('values longer than the 4000 character cap are ignored', () => {
-  assert.equal(mergeContent(defaults, { top: 'x'.repeat(4001) }).top, 'top');
-  assert.equal(mergeContent(defaults, { top: 'x'.repeat(4000) }).top.length, 4000);
+test('values longer than the 16000 unit sanity cap are ignored', () => {
+  assert.equal(mergeContent(defaults, { top: 'x'.repeat(16001) }).top, 'top');
+  assert.equal(mergeContent(defaults, { top: 'x'.repeat(16000) }).top.length, 16000);
 });
 
 test('null, undefined, or non-object values return a plain copy', () => {
@@ -56,4 +57,17 @@ test('works against the real content.js: a sheet value replaces the placeholder'
   assert.equal(merged.events.ceremony.time, '4:30 PM');
   assert.equal(merged.announcement.text, 'Parking lot B is closed.');
   assert.equal(merged.events.reception.time, content.events.reception.time);
+});
+
+test('round trip: values the server accepts (counted in code points) survive the merge', () => {
+  for (const value of ['a'.repeat(3995) + '😀'.repeat(6), '😀'.repeat(4000)]) {
+    const parsed = parseContentRows([['', '', value, 'story.howWeMet']]);
+    const merged = mergeContent(content, parsed);
+    assert.equal(merged.story.howWeMet, parsed['story.howWeMet']);
+    assert.notEqual(merged.story.howWeMet, content.story.howWeMet);
+  }
+});
+
+test('a value of 16001 UTF-16 units is still ignored by the merge', () => {
+  assert.equal(mergeContent(content, { 'story.howWeMet': 'x'.repeat(16001) }).story.howWeMet, content.story.howWeMet);
 });

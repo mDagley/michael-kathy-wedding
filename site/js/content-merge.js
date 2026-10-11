@@ -5,7 +5,10 @@
 // as strings in the defaults can change, so the sheet cannot add structure, scripts, or links the
 // developer did not put there. nav and credits are developer-owned.
 const DEV_OWNED = new Set(['nav', 'credits']);
-const MAX_LEN = 4000;
+// The server limits each field to at most 4000 code points, which is at most 8000 UTF-16 units
+// (String.length counts units, and an emoji is 2). 16000 leaves headroom and is only a sanity cap
+// against absurd input, not the real limit.
+const MAX_LEN = 16000;
 
 export function mergeContent(defaults, values) {
   const merged = structuredClone(defaults);

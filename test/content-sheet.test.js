@@ -112,7 +112,7 @@ test('createContentSource (dev) reads DEV_CONTENT_PATH through the file source',
   const dir = mkdtempSync(join(tmpdir(), 'content-'));
   const path = join(dir, 'c.json');
   writeFileSync(path, JSON.stringify({ 'dress.code': 'From file' }));
-  assert.deepEqual(await createContentSource({ DEV_CONTENT_PATH: path }).load(), { 'dress.code': 'From file' });
+  assert.deepEqual(await createContentSource({ NETLIFY_DEV: 'true', DEV_CONTENT_PATH: path }).load(), { 'dress.code': 'From file' });
 });
 
 function mockClient(calls) {
