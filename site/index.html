@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Michael &amp; Kathy · August 21, 2027</title>
+  <meta name="description" content="Michael and Kathy are getting married on August 21, 2027 in Chicago.">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body data-page="home">
+  <div id="site-nav"></div>
+  <main>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="eyebrow">We're getting married</div>
+          <h1 class="script" data-c="couple.names"></h1>
+          <div class="when"><span data-c="couple.date"></span><br><span data-c="couple.city"></span></div>
+          <div class="countdown" data-countdown aria-label="Time until the wedding">
+            <div class="count-box"><b data-unit="days">0</b><span>Days</span></div>
+            <div class="count-box"><b data-unit="hours">00</b><span>Hours</span></div>
+            <div class="count-box"><b data-unit="minutes">00</b><span>Minutes</span></div>
+            <div class="count-box"><b data-unit="seconds">00</b><span>Seconds</span></div>
+          </div>
+          <p style="margin-top:32px"><a class="btn" href="rsvp.html">RSVP</a></p>
+          <p class="note">The venue is shared with guests once you RSVP yes.</p>
+        </div>
+        <div class="arch">
+          <img src="assets/illustrations/vase-arch.jpg" alt="Illustration of a terracotta vase with leaves under an arch and sun">
+        </div>
+      </div>
+    </header>
+
+    <section class="container">
+      <div class="grid-3">
+        <div class="card">
+          <div class="eyebrow">Ceremony</div>
+          <div class="big" data-c="events.ceremony.time"></div>
+          <p>Please arrive <span data-c="events.arrival.time"></span></p>
+        </div>
+        <div class="card">
+          <div class="eyebrow">Reception</div>
+          <div class="big" data-c="events.reception.time"></div>
+          <p>Dinner, dancing, and candlelight</p>
+        </div>
+        <div class="card">
+          <div class="eyebrow">Dress code</div>
+          <div class="big" data-c="dress.code"></div>
+          <p data-c="dress.note"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
