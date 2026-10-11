@@ -9,3 +9,4 @@ node_modules/
 /assets/
 /Details.txt
 /IMG_*.png
+.claude/
