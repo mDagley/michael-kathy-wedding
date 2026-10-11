@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { format } from 'node:util';
 import { createFunction } from '../lib/function-factory.js';
 import { createFileSheet } from '../lib/sheet-file.js';
 import { createLimiter } from '../lib/limiter.js';
@@ -87,4 +88,41 @@ test('lookup kind works end to end with the same sheet', async () => {
   assert.deepEqual(JSON.parse(hit.body), { ok: true, found: true, venue: VENUE });
   const miss = await lookup(post({ name: 'Wrong Name', email: 'ada@example.com' }));
   assert.deepEqual(JSON.parse(miss.body), { ok: true, found: false });
+});
+
+test('unexpected errors are logged without request data', async () => {
+  const err = Object.assign(new Error('boom-message'), { code: 'E_X', config: { data: 'guest@example.com' }, response: { data: 'secret-details' } });
+  const sheet = { findByEmail: async () => { throw err; }, append: async () => {}, update: async () => {} };
+  const fn = createFunction('rsvp', { sheet, venue: VENUE, limiter: createLimiter({ max: 10, windowMs: 1000 }) });
+  const logged = [];
+  const orig = console.error;
+  console.error = (...args) => logged.push(args);
+  let res;
+  try { res = await fn(post(body)); } finally { console.error = orig; }
+  assert.equal(res.statusCode, 500);
+  assert.deepEqual(JSON.parse(res.body), { ok: false, error: 'Something went wrong on our end. Please try again.' });
+  assert.equal(logged.length, 1);
+  const text = format(...logged[0]);
+  assert.equal(text.includes('guest@example.com'), false);
+  assert.equal(text.includes('secret-details'), false);
+  assert.equal(text.includes('boom-message'), true);
+});
+
+test('non-string bodies get 400, even with isBase64Encoded', async () => {
+  for (const b of [123, { name: 'x' }]) {
+    for (const flag of [false, true]) {
+      const res = await build()({ httpMethod: 'POST', headers: {}, body: b, isBase64Encoded: flag });
+      assert.equal(res.statusCode, 400);
+      assert.deepEqual(JSON.parse(res.body), { ok: false, error: 'Invalid JSON.' });
+    }
+  }
+});
+
+test('size limit is measured after base64 decoding', async () => {
+  const json = JSON.stringify({ ...body, pad: 'p'.repeat(9500 - JSON.stringify(body).length - 12) });
+  const b64 = Buffer.from(json, 'utf8').toString('base64');
+  assert.ok(Buffer.byteLength(json) < 10240);
+  assert.ok(Buffer.byteLength(b64) > 10240);
+  const res = await build()({ ...post(''), body: b64, isBase64Encoded: true });
+  assert.equal(res.statusCode, 200);
 });

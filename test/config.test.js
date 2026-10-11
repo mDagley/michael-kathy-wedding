@@ -16,7 +16,7 @@ test('loadVenue uses env values', () => {
 });
 
 test('createSheet refuses a file fallback in production', () => {
-  assert.throws(() => createSheet({ CONTEXT: 'production' }));
+  assert.throws(() => createSheet({ CONTEXT: 'production' }), /GOOGLE_SHEET_ID/);
 });
 
 test('createSheet returns a file sheet in dev', () => {
@@ -30,4 +30,14 @@ test('clientIp precedence', () => {
   assert.equal(clientIp({ headers: { 'x-forwarded-for': '2.2.2.2, 3.3.3.3' } }), '2.2.2.2');
   assert.equal(clientIp({ headers: {} }), 'unknown');
   assert.equal(clientIp({}), 'unknown');
+});
+
+test('createSheet builds a Google sheet in production when credentials are set', () => {
+  const sheet = createSheet({
+    CONTEXT: 'production',
+    GOOGLE_SHEET_ID: 'abc',
+    GOOGLE_CLIENT_EMAIL: 'svc@example.iam.gserviceaccount.com',
+    GOOGLE_PRIVATE_KEY: 'not-a-real-key',
+  });
+  for (const m of ['findByEmail', 'append', 'update']) assert.equal(typeof sheet[m], 'function');
 });
