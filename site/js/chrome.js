@@ -12,9 +12,23 @@ function el(doc, tag, attrs = {}, ...children) {
 // A value is a placeholder if it contains a bracketed [TBD] marker anywhere.
 const flagIfPlaceholder = (value) => (value.includes('[') ? 'tbd' : false);
 
+function renderAnnouncement(doc, content) {
+  const text = String(content.announcement?.text ?? '').trim();
+  const existing = doc.querySelector('.announcement');
+  if (!text) {
+    existing?.remove();
+    return;
+  }
+  const bar = existing || el(doc, 'div', { class: 'announcement', role: 'region', 'aria-label': 'Announcement' });
+  bar.textContent = text;
+  if (!existing) doc.body.prepend(bar);
+}
+
 export function renderChrome(doc, content, currentPage) {
+  renderAnnouncement(doc, content);
   const navHost = doc.getElementById('site-nav');
-  if (navHost) {
+  if (navHost && !(navHost.querySelector('nav') && navHost.dataset.renderedFor === String(currentPage))) {
+    // Skip the rebuild when the nav for this page is already there: replacing it can drop keyboard focus.
     const links = el(doc, 'div', { class: 'links' });
     content.nav.forEach((item) => {
       links.append(
@@ -30,6 +44,7 @@ export function renderChrome(doc, content, currentPage) {
         el(doc, 'a', { class: 'logo', href: 'index.html', 'aria-label': 'Home' }, 'M & K'),
         links)
     );
+    navHost.dataset.renderedFor = String(currentPage);
   }
 
   const footHost = doc.getElementById('site-footer');

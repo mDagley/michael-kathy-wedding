@@ -65,7 +65,8 @@ export function initRsvpForm(doc, { fetchFn, store, contact }) {
         no.focus();
       }
     } catch {
-      errorBox.textContent = `We couldn't send your RSVP right now. Please try again, or contact us at ${contact}.`;
+      const contactText = typeof contact === 'function' ? contact() : contact;
+      errorBox.textContent = `We couldn't send your RSVP right now. Please try again, or contact us at ${contactText}.`;
       errorBox.hidden = false;
       button.disabled = false;
     }

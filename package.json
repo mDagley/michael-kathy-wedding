@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "content-template": "node scripts/make-content-template.js",
     "dev": "node node_modules/netlify-cli/bin/run.js dev --port 8888 --offline"
   },
   "engines": {

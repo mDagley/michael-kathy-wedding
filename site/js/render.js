@@ -18,11 +18,8 @@ export function applyContent(root, content) {
 
   root.querySelectorAll('[data-c-href]').forEach((el) => {
     const value = getPath(content, el.dataset.cHref);
-    if (typeof value === 'string' && /^https?:\/\//.test(value)) {
-      el.setAttribute('href', value);
-    } else {
-      el.setAttribute('href', '#');
-      el.classList.add('tbd');
-    }
+    const valid = typeof value === 'string' && /^https?:\/\//.test(value);
+    el.setAttribute('href', valid ? value : '#');
+    el.classList.toggle('tbd', !valid);
   });
 }

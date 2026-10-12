@@ -16,6 +16,8 @@ p { margin: 0 0 12px; }
 .serif { font-family: 'Cormorant Garamond', serif; }
 .eyebrow { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
 .tbd { border-bottom: 1px dotted currentColor; }
+/* Text from content.js / the couple's sheet: show line breaks they typed, collapse extra spaces. */
+[data-c] { white-space: pre-line; }
 
 /* nav */
 .nav { display: flex; flex-wrap: wrap; gap: 16px 36px; align-items: center; justify-content: space-between; padding: 24px 32px; border-bottom: 1px solid var(--border); background: var(--bg); }
@@ -100,6 +102,12 @@ p { margin: 0 0 12px; }
 .error { color: var(--error); font-size: 14px; margin: 0; }
 .status { margin: 0; font-size: 15px; }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* announcement banner (text comes from the couple's sheet; empty means no banner) */
+.announcement { background: var(--band); color: var(--band-text); text-align: center; padding: 10px 20px; font-size: 14px; letter-spacing: 1px; line-height: 1.4; border-bottom: 1px solid var(--band-line); overflow-wrap: anywhere; }
+/* Hide text until live content arrives; the animation reveals it after 2.5 s even if scripts fail. */
+@keyframes content-reveal { to { visibility: visible; } }
+.content-pending [data-c], .content-pending #site-footer { visibility: hidden; animation: content-reveal 0s linear 2.5s forwards; }
 
 /* footer and switcher */
 .footer { border-top: 1px solid var(--border); text-align: center; padding: 24px; font-size: 14px; letter-spacing: 2px; color: var(--text-2); }
