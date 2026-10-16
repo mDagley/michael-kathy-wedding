@@ -35,8 +35,8 @@ test('the first row for a duplicated key wins', () => {
 });
 
 test('single-line fields collapse line breaks; multiline fields keep them', () => {
-  const out = parseContentRows([row('dress.code', 'Black\ntie'), row('faq.plusOne', 'Line one\nLine two')]);
-  assert.equal(out['dress.code'], 'Black tie');
+  const out = parseContentRows([row('couple.city', 'Chicago\nIllinois'), row('faq.plusOne', 'Line one\nLine two')]);
+  assert.equal(out['couple.city'], 'Chicago Illinois');
   assert.equal(out['faq.plusOne'], 'Line one\nLine two');
 });
 
@@ -245,4 +245,9 @@ test('duplicate keys: an invalid first url does not claim the key', () => {
     parseContentRows([row('travel.hotels.0.link', 'javascript:alert(1)'), row('travel.hotels.0.link', 'https://good.com/a')]),
     { 'travel.hotels.0.link': 'https://good.com/a' },
   );
+});
+
+test('a full-length dress code with a paragraph break is kept whole', () => {
+  const text = 'Think elevated yet relaxed! We encourage dressy attire with a romantic, effortless, boho-chic feel. Flowy dresses, linen suits, and polished yet comfortable looks are perfect for our outdoor celebration.\n\nAll colors are welcome, and we’d love to see touches of our wedding palette of sage, olive, and terracotta!';
+  assert.equal(parseContentRows([row('dress.code', text)])['dress.code'], text);
 });
