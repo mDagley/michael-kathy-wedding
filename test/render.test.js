@@ -49,3 +49,12 @@ test('a link that becomes valid loses the placeholder styling', () => {
   assert.equal(el.getAttribute('href'), 'https://example.com/real');
   assert.equal(el.classList.contains('tbd'), false);
 });
+
+test('formatTime makes typed times look alike and leaves other text alone', async () => {
+  const { formatTime } = await import('../site/js/render.js');
+  assert.equal(formatTime('1:15pm'), '1:15 PM');
+  assert.equal(formatTime('12:53 pm'), '12:53 PM');
+  assert.equal(formatTime('3 p.m.'), '3 PM');
+  assert.equal(formatTime('[TIME TBD]'), '[TIME TBD]');
+  assert.equal(formatTime('Around noon'), 'Around noon');
+});
