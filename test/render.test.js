@@ -58,3 +58,28 @@ test('formatTime makes typed times look alike and leaves other text alone', asyn
   assert.equal(formatTime('[TIME TBD]'), '[TIME TBD]');
   assert.equal(formatTime('Around noon'), 'Around noon');
 });
+
+const timelineHtml = `<ol class="timeline">
+  <li id="a"><div data-c="events.arrival.time"></div></li>
+  <li id="c"><div data-c="events.ceremony.time"></div></li>
+  <li id="r"><div data-c="events.reception.time"></div></li>
+  <li id="x"><div data-c="events.extra.time"></div></li>
+</ol>`;
+const order = (document) => [...document.querySelectorAll('.timeline li')].map((li) => li.id).join('');
+const times = (arrival, ceremony, reception, extra) => ({ events: { arrival: { time: arrival }, ceremony: { time: ceremony }, reception: { time: reception }, extra: { time: extra } } });
+
+test('the schedule is put in time order, including 12 AM/PM edge cases', () => {
+  const { document } = new JSDOM(timelineHtml).window;
+  applyContent(document, times('12:53pm', '1:15pm', '2:30pm', '1:35pm'));
+  assert.equal(order(document), 'acxr');
+  applyContent(document, times('12:30 PM', '11:00 AM', '12:00 AM', '1 PM'));
+  assert.equal(order(document), 'rcax');
+});
+
+test('the schedule keeps its order while any time is unreadable', () => {
+  const { document } = new JSDOM(timelineHtml).window;
+  applyContent(document, times('[ARRIVAL TIME TBD]', '1:15pm', '2:30pm', '1:35pm'));
+  assert.equal(order(document), 'acrx');
+  applyContent(document, times('Around noon', '1:15pm', '2:30pm', '1:35pm'));
+  assert.equal(order(document), 'acrx');
+});
